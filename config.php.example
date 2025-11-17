@@ -1,0 +1,26 @@
+<?php
+// config.php - Configuration and environment variables
+// Copy this file to config.php and fill in your values
+// NEVER commit config.php to git!
+
+// OpenAI API Key
+// Get your key from: https://platform.openai.com/api-keys
+define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: 'your-api-key-here');
+
+// Base paths
+define('MEDIA_FOLDER', __DIR__ . '/media');
+define('BASE_URL', ''); // Will be auto-detected or set manually
+
+// Error reporting (disable in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Set to 1 for debugging, 0 for production
+
+// Helper function to get base URL
+function getBaseUrl() {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $path = dirname($script);
+    return $protocol . '://' . $host . ($path !== '/' ? $path : '');
+}
+

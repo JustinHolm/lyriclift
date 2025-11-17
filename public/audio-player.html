@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Loop Player - Lyric Lift</title>
+    <link rel="stylesheet" href="public/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .audio-player-container {
+            margin-top: 30px;
+        }
+        .audio-track {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.2s;
+        }
+        .audio-track:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .audio-track.playing {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6edff 100%);
+            border-left: 4px solid #667eea;
+        }
+        .track-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            text-align: center;
+        }
+        .track-type-label {
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .track-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .play-pause-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+        .play-pause-btn:hover {
+            background: #667eea;
+            transform: scale(1.1);
+        }
+        .play-pause-btn:hover .play-icon,
+        .play-pause-btn:hover .pause-icon {
+            filter: brightness(0) invert(1);
+        }
+        .loop-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .loop-toggle:hover {
+            background: #f7fafc;
+        }
+        .loop-toggle input {
+            display: none;
+        }
+        .loop-label {
+            font-size: 24px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .loop-toggle input:checked + .loop-label {
+            opacity: 1;
+        }
+        .loop-toggle input:not(:checked) + .loop-label {
+            opacity: 0.3;
+        }
+        .track-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .track-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2d3748;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .track-description {
+            font-size: 14px;
+            color: #718096;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .track-meta {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 5px;
+        }
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+        }
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        .volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+        .volume-value {
+            font-size: 12px;
+            color: #718096;
+            min-width: 35px;
+            text-align: right;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+        .empty-state h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .global-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .global-controls h3 {
+            margin: 0;
+            color: #2d3748;
+        }
+        .global-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.playing {
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+        .status-indicator.stopped {
+            background: #cbd5e0;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Audio Loop Player</h1>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-item">
+                    <span>✍️</span>
+                    <span>Lyrics Studio</span>
+                </a>
+                <a href="video-inspiration.html" class="nav-item">
+                    <span>🎬</span>
+                    <span>Video Inspiration</span>
+                </a>
+                <a href="audio-studio.html" class="nav-item active">
+                    <span>🎤</span>
+                    <span>Audio Studio</span>
+                </a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="global-controls">
+                <h3>Global Controls</h3>
+                <div class="global-buttons">
+                    <button class="btn btn-primary" id="playAllBtn">▶️ Play All</button>
+                    <button class="btn btn-secondary" id="stopAllBtn">⏹️ Stop All</button>
+                </div>
+            </div>
+
+            <div id="audioPlayerContainer" class="audio-player-container">
+                <div class="loading">Loading audio files...</div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by OpenAI GPT-4 • Built with PHP • <a href="https://lyriclift.com" style="color: #667eea; text-decoration: none;">lyriclift.com</a></p>
+        </footer>
+    </div>
+
+    <script src="public/audio-player.js"></script>
+</body>
+</html>
+

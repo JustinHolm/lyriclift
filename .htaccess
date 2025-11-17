@@ -1,0 +1,44 @@
+# .htaccess - URL rewriting and routing for PHP application
+
+RewriteEngine On
+
+# Serve index.php for root
+DirectoryIndex index.php
+
+# Allow direct access to media folder
+RewriteRule ^media/(.*)$ media/$1 [L]
+
+# Allow direct access to mp3 folder
+RewriteRule ^mp3/(.*)$ mp3/$1 [L]
+
+# Allow direct access to public assets (CSS, JS, images)
+RewriteRule ^public/(.*)$ public/$1 [L]
+
+# Allow direct access to API endpoints
+RewriteRule ^api/(.*)$ api/$1 [L]
+
+# Route everything else to index.php (for clean URLs)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L]
+
+# Security: Prevent access to sensitive files
+<FilesMatch "^(config\.php|\.env|\.git)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect songs folder from direct access
+<IfModule mod_rewrite.c>
+    RewriteRule ^songs/ - [F,L]
+</IfModule>
+
+# Enable CORS for API endpoints (if needed)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(php)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type"
+    </FilesMatch>
+</IfModule>
+

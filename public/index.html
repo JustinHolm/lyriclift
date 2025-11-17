@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Lyric Lift - AI-powered lyrics enhancement tool. Enhance your song lyrics with creative AI alternatives.">
+    <meta name="author" content="Lyric Lift">
+    <title>Lyric Lift - AI-Powered Lyrics Enhancement</title>
+    <link rel="stylesheet" href="public/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Lyric Lift</h1>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-item active">
+                    <span>✍️</span>
+                    <span>Lyrics Studio</span>
+                </a>
+                <a href="video-inspiration.html" class="nav-item">
+                    <span>🎬</span>
+                    <span>Video Inspiration</span>
+                </a>
+                <a href="audio-studio.html" class="nav-item">
+                    <span>🎤</span>
+                    <span>Audio Studio</span>
+                </a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <h2>🎵 Enter Your Lyrics</h2>
+                <div class="lyrics-editor-container">
+                    <div 
+                        id="lyricsInput" 
+                        class="lyrics-editor"
+                        contenteditable="true"
+                        data-placeholder="Paste your lyrics here... Select text and click 'Mark for Enhancement'"
+                    ></div>
+                    <div class="editor-toolbar">
+                        <button id="markForEnhancementBtn" class="mark-btn" title="Mark selected text for AI enhancement">
+                            ✨ Mark for Enhancement
+                        </button>
+                        <button id="clearMarksBtn" class="clear-marks-btn" title="Clear all marks">
+                            🗑️ Clear Marks
+                        </button>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="enhanceBtn" class="enhance-btn">
+                        <span class="btn-text">✨ Enhance Lyrics</span>
+                        <span class="btn-loading" style="display: none;">
+                            <div class="spinner"></div>
+                            Enhancing...
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="output-section" id="outputSection" style="display: none;">
+                <h2>Enhanced Lyrics</h2>
+                <div class="output-container">
+                    <div class="output-box output-box-large">
+                        <h3>Select Your Preferred Lines</h3>
+                        <div id="enhancedLyrics" class="lyrics-output-with-dropdowns"></div>
+                        <button id="applySelectionsBtn" class="apply-selections-btn" style="display: none; margin-top: 15px;">
+                            ✅ Apply Selected Lines
+                        </button>
+                    </div>
+                    <div class="output-box">
+                        <h3>Final Result</h3>
+                        <div id="finalLyrics" class="lyrics-output"></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="clearBtn" class="clear-btn">Clear All</button>
+                    <span id="currentVersionInfo" style="display: none;"></span>
+                </div>
+            </div>
+
+            <div class="songs-section">
+                <h2>💾 Saved Songs</h2>
+                <div class="songs-controls">
+                    <button id="saveSongBtn" class="save-song-btn">💾 Save Current Song</button>
+                    <button id="loadSongsBtn" class="load-songs-btn">📂 Load Saved Songs</button>
+                </div>
+                
+                <div id="songsList" class="songs-list" style="display: none;">
+                    <!-- Songs will be listed here -->
+                </div>
+            </div>
+
+
+            <div class="example-section">
+                <h3>💡 How to use:</h3>
+                <ol>
+                    <li>Paste your lyrics in the editor above</li>
+                    <li><strong>Select text</strong> you want AI to enhance, then click <strong>"✨ Mark for Enhancement"</strong></li>
+                    <li>Repeat for multiple sections (each will be highlighted in yellow)</li>
+                    <li>Click "✨ Enhance Lyrics" to get AI suggestions with dropdowns</li>
+                    <li>Choose your preferred alternatives from the dropdowns</li>
+                    <li>Click "✅ Apply Selected Lines" to copy your choices back to the editor</li>
+                    <li>Visit <strong>"🎬 Video Inspiration"</strong> to search images and generate alternate verses</li>
+                </ol>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by OpenAI GPT-4 • Built with PHP • <a href="https://lyriclift.com" style="color: #667eea; text-decoration: none;">lyriclift.com</a></p>
+        </footer>
+    </div>
+
+    <!-- Save Song Modal -->
+    <div id="saveSongModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <h3>💾 Save & Register Song</h3>
+            
+            <div class="form-group">
+                <label>Song Title</label>
+                <input type="text" id="songTitleInput" placeholder="Song Title" value="Untitled Song">
+            </div>
+            
+            <div class="form-group">
+                <label>Authors/Collaborators</label>
+                <div id="authorsList" class="authors-list">
+                    <div class="author-input">
+                        <input type="text" class="author-name" placeholder="Author name" required>
+                        <input type="email" class="author-email" placeholder="Email (optional)">
+                        <select class="author-role">
+                            <option value="primary">Primary Writer</option>
+                            <option value="co-writer">Co-Writer</option>
+                            <option value="contributor">Contributor</option>
+                        </select>
+                        <button type="button" class="remove-author-btn" style="display: none;">×</button>
+                    </div>
+                </div>
+                <button type="button" id="addAuthorBtn" class="add-author-btn">+ Add Author</button>
+            </div>
+            
+            <div class="form-group">
+                <textarea id="versionNotesInput" placeholder="Version notes (optional)" rows="3"></textarea>
+            </div>
+            
+            <div class="save-options">
+                <label>
+                    <input type="checkbox" id="saveAsNewVersionCheckbox" checked>
+                    Save as new version
+                </label>
+                <small>Uncheck to update current version</small>
+            </div>
+            
+            <div class="save-options">
+                <label>
+                    <input type="checkbox" id="registerBlockchainCheckbox" checked>
+                    ⛓️ Register to blockchain for ownership proof
+                </label>
+                <small>Creates permanent, verifiable ownership record</small>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="confirmSaveBtn" class="confirm-btn">Save & Register</button>
+                <button id="cancelSaveBtn" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Version History Modal -->
+    <div id="versionHistoryModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <h3>Version History: <span id="versionHistoryTitle"></span></h3>
+            <div id="versionHistoryList" class="version-history-list">
+                <!-- Versions will be listed here -->
+            </div>
+            <div class="modal-buttons">
+                <button id="closeVersionHistoryBtn" class="cancel-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="public/script.js"></script>
+</body>
+</html> 

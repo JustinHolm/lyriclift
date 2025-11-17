@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Inspiration - Lyric Lift</title>
+    <link rel="stylesheet" href="public/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .search-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .search-section h2 {
+            color: white;
+            margin-bottom: 20px;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        .search-btn {
+            padding: 15px 30px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .image-card {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .lyrics-input-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .lyrics-input-modal.active {
+            display: flex;
+        }
+        .lyrics-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .selected-image-preview {
+            max-width: 200px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .verses-output {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+        .verses-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        @media (max-width: 768px) {
+            .verses-wrapper {
+                flex-direction: column;
+            }
+        }
+        .verse-option {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .copy-verse-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .copy-verse-btn:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Video Inspiration</h1>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-item">
+                    <span>✍️</span>
+                    <span>Lyrics Studio</span>
+                </a>
+                <a href="video-inspiration.html" class="nav-item active">
+                    <span>🎬</span>
+                    <span>Video Inspiration</span>
+                </a>
+                <a href="audio-studio.html" class="nav-item">
+                    <span>🎤</span>
+                    <span>Audio Studio</span>
+                </a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="search-section">
+                <h2>🔍 Search for Images</h2>
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Enter keywords to search images (e.g., 'space', 'ocean', 'city night')..."
+                    >
+                    <button id="searchBtn" class="search-btn">Search</button>
+                </div>
+                <p style="color: rgba(255,255,255,0.9); margin: 0;">Search through our image collection to find inspiration for your music video</p>
+            </div>
+
+            <div class="images-section" id="imagesSection" style="display: none;">
+                <h2>🎨 Matching Images</h2>
+                
+                <div class="navigation-controls">
+                    <button class="nav-arrow nav-left" id="scrollLeft" title="Scroll left">
+                        <span>←</span>
+                    </button>
+                    <button class="nav-arrow nav-right" id="scrollRight" title="Scroll right">
+                        <span>→</span>
+                    </button>
+                </div>
+                
+                <div class="images-container" id="imagesContainer">
+                    <!-- Images will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <div class="verses-output" id="versesOutput" style="display: none;">
+                <h2>✨ AI-Generated Alternate Verses</h2>
+                <div id="versesContainer"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by OpenAI GPT-4 • Built with PHP • <a href="https://lyriclift.com" style="color: #667eea; text-decoration: none;">lyriclift.com</a></p>
+        </footer>
+    </div>
+
+    <!-- Lyrics Input Modal -->
+    <div id="lyricsInputModal" class="lyrics-input-modal">
+        <div class="lyrics-modal-content">
+            <h3>📝 Enter Sample Lyrics</h3>
+            <p>Provide some sample lyrics to inspire alternate verses based on the selected image.</p>
+            
+            <img id="selectedImagePreview" class="selected-image-preview" src="" alt="Selected image">
+            <p id="selectedImageDescription" style="color: #666; font-style: italic;"></p>
+            
+            <textarea 
+                id="sampleLyricsInput" 
+                placeholder="Enter your sample lyrics here..."
+                rows="8"
+                style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px; margin: 15px 0; box-sizing: border-box;"
+            ></textarea>
+            
+            <div style="display: flex; gap: 10px;">
+                <button id="generateVersesBtn" class="confirm-btn" style="flex: 1;">Generate Verses</button>
+                <button id="cancelLyricsBtn" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="public/video-inspiration.js"></script>
+</body>
+</html>
+

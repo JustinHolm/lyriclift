@@ -1,0 +1,75 @@
+# Environment and sensitive files
+config.php
+.env
+*.env
+.env.local
+.env.production
+
+# API Keys and secrets
+*secret*
+*key*
+*.pem
+*.key
+
+# User-generated content
+songs/
+blockchain/
+media/*.jpg
+media/*.jpeg
+media/*.png
+media/*.gif
+media/*.mp4
+media/*.webm
+media/*.mov
+media/*.json
+mp3/*.mp3
+mp3/*.wav
+mp3/*.ogg
+mp3/*.m4a
+mp3/*.aac
+mp3/*.flac
+
+# Keep media folder structure but ignore files
+!media/.gitkeep
+!mp3/.gitkeep
+
+# Logs
+*.log
+logs/
+error_log
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Node modules (if any)
+node_modules/
+package-lock.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# PHP
+vendor/
+composer.lock
+
