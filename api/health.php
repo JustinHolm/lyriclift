@@ -1,23 +1,39 @@
 <?php
 // api/health.php - Health check endpoint
+// Enable error display temporarily for debugging
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 // Try to load config, but handle gracefully if missing
-$configExists = file_exists(__DIR__ . '/../config.php');
-if ($configExists) {
-    require_once __DIR__ . '/../config.php';
+$configExists = false;
+$configError = null;
+
+try {
+    $configPath = __DIR__ . '/../config.php';
+    $configExists = file_exists($configPath);
+    
+    if ($configExists) {
+        require_once $configPath;
+    }
+} catch (Throwable $e) {
+    $configError = $e->getMessage();
+    $configExists = false;
 }
 
 $status = [
     'status' => 'ok',
     'config_file' => $configExists ? 'exists' : 'missing',
+    'config_error' => $configError,
     'openai' => 'not configured',
     'media_folder' => 'unknown',
     'media_files' => 0,
     'timestamp' => date('c'),
     'php_version' => PHP_VERSION,
-    'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown'
+    'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
+    'config_path' => __DIR__ . '/../config.php'
 ];
 
 // Check OpenAI configuration if config exists
