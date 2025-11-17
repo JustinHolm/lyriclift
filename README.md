@@ -110,7 +110,8 @@ lyriclift/
 ├── mp3/                    # Audio tracks
 ├── config.php              # Configuration (not in git)
 ├── config.php.example      # Configuration template
-├── router.php              # Development server router
+├── router.php              # Development server router (local dev only)
+├── index.php               # Production entry point
 ├── .htaccess               # Apache configuration
 └── README.md
 ```

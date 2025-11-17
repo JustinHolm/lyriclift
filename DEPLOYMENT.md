@@ -22,7 +22,7 @@ This guide covers deploying Lyric Lift to **Hostinger** (or similar shared hosti
   - `media/` folder contents (user uploads)
   - `mp3/` folder contents (user uploads)
   - `.git/` folder
-  - `node_modules/` if present
+  - `router.php` (only needed for local development)
 
 **Keep folder structure:**
 ```
