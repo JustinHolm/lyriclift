@@ -5,7 +5,20 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once __DIR__ . '/../config.php';
+// Try to load config, handle errors gracefully
+try {
+    $configPath = __DIR__ . '/../config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+} catch (Throwable $e) {
+    // Config failed to load, use defaults
+}
+
+// Define MEDIA_FOLDER if not defined
+if (!defined('MEDIA_FOLDER')) {
+    define('MEDIA_FOLDER', __DIR__ . '/../media');
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -28,26 +41,41 @@ $mediaItems = [];
 
 if (!is_dir($mediaFolder)) {
     http_response_code(404);
-    echo json_encode(['error' => 'Media folder not found']);
+    echo json_encode(['error' => 'Media folder not found', 'path' => $mediaFolder]);
     exit;
 }
 
 $files = scandir($mediaFolder);
+if ($files === false) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to read media folder']);
+    exit;
+}
+
 $jsonFiles = array_filter($files, function($file) {
     return pathinfo($file, PATHINFO_EXTENSION) === 'json';
 });
 
 if (empty($jsonFiles)) {
     http_response_code(404);
-    echo json_encode(['error' => 'No media files found']);
+    echo json_encode(['error' => 'No media files found', 'path' => $mediaFolder]);
     exit;
 }
 
 // Read and parse all JSON files
 foreach ($jsonFiles as $jsonFile) {
     $jsonPath = $mediaFolder . '/' . $jsonFile;
-    $jsonContent = file_get_contents($jsonPath);
-    $mediaItem = json_decode($jsonContent, true);
+    
+    if (!file_exists($jsonPath) || !is_readable($jsonPath)) {
+        continue; // Skip unreadable files
+    }
+    
+    try {
+        $jsonContent = file_get_contents($jsonPath);
+        $mediaItem = json_decode($jsonContent, true);
+    } catch (Exception $e) {
+        continue; // Skip files that can't be read
+    }
     
     if ($mediaItem === null) {
         continue;

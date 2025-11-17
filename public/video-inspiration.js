@@ -41,6 +41,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ query: searchQuery })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
+                showNotification(errorData.error || `Server error (${response.status})`, 'error');
+                setLoadingState(searchBtn, false);
+                return;
+            }
+
             const data = await response.json();
 
             if (data.success) {
@@ -53,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error:', error);
-            showNotification('Network error. Please try again.', 'error');
+            showNotification(`Network error: ${error.message}. Please check your connection and try again.`, 'error');
         } finally {
             setLoadingState(searchBtn, false);
         }
@@ -141,6 +148,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
+                showNotification(errorData.error || errorData.details || `Server error (${response.status})`, 'error');
+                setLoadingState(generateVersesBtn, false);
+                return;
+            }
+
             const data = await response.json();
 
             if (data.success) {
@@ -154,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error:', error);
-            showNotification('Network error. Please try again.', 'error');
+            showNotification(`Network error: ${error.message}. Please check your connection and try again.`, 'error');
         } finally {
             setLoadingState(generateVersesBtn, false);
         }
