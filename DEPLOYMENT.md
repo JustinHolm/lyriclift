@@ -144,12 +144,18 @@ memory_limit = 256M
 
 ### 8. Test Your Deployment
 
-1. **Visit your domain:** https://lyriclift.com
-2. **Test main page:** Should load Lyrics Studio
-3. **Test API:** Try enhancing some lyrics
-4. **Test file uploads:** Upload an image to media folder
-5. **Test saving:** Save a test song
-6. **Check console:** Open browser DevTools, check for errors
+**Test Checklist:**
+- [ ] **Visit your domain:** https://lyriclift.com
+- [ ] **Test main page:** Should load Lyrics Studio
+- [ ] **Test navigation:** All menu items work
+- [ ] **Test API health:** https://lyriclift.com/api/health.php returns JSON
+- [ ] **Test API endpoints:** Try enhancing some lyrics
+- [ ] **Test file uploads:** Upload an image to media folder
+- [ ] **Test saving:** Save a test song
+- [ ] **Test loading:** Load a saved song
+- [ ] **Test audio studio:** Load audio files
+- [ ] **Check console:** Open browser DevTools (F12), check for errors
+- [ ] **Test on mobile:** Verify responsive design works
 
 ### 9. SSL Certificate (HTTPS)
 
@@ -223,46 +229,80 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 ### Monitor
 
-1. **Check error logs:**
-   - cPanel → Error Log
-   - Check for PHP errors
+**Error Logs:**
+- [ ] Check cPanel → Error Log
+- [ ] Look for PHP errors
+- [ ] Check for file permission errors
+- [ ] Monitor API errors
 
-2. **Test all features:**
-   - Lyrics enhancement
-   - Save/load songs
-   - Image search
-   - Video gallery
-   - Audio player
-   - Blockchain registration
+**Feature Testing:**
+- [ ] Lyrics enhancement works
+- [ ] Save/load songs works
+- [ ] Image search works
+- [ ] Video gallery loads
+- [ ] Audio player works
+- [ ] Blockchain registration works
+- [ ] All navigation links work
 
-3. **Performance:**
-   - Check page load times
-   - Monitor API response times
-   - Check server resources
+**Performance Monitoring:**
+- [ ] Check page load times
+- [ ] Monitor API response times
+- [ ] Check server resources (CPU, memory)
+- [ ] Monitor OpenAI API usage/costs
 
 ### Maintenance
 
-1. **Regular backups:**
-   - Backup `songs/` folder
-   - Backup `blockchain/` folder
-   - Backup `config.php`
+**Regular Backups:**
+- [ ] Backup `songs/` folder (weekly/monthly)
+- [ ] Backup `blockchain/` folder (weekly/monthly)
+- [ ] Backup `config.php` (when changed)
+- [ ] Backup `media/` folder if important files exist
+- [ ] Store backups off-server
 
-2. **Update dependencies:**
-   - Keep PHP updated
-   - Monitor OpenAI API changes
+**Update Dependencies:**
+- [ ] Keep PHP updated (check Hostinger for updates)
+- [ ] Monitor OpenAI API changes
+- [ ] Update code from GitHub regularly
+- [ ] Test updates in staging before production
 
-3. **Monitor usage:**
-   - Track API usage/costs
-   - Monitor storage usage
+**Monitor Usage:**
+- [ ] Track OpenAI API usage/costs (daily/weekly)
+- [ ] Monitor storage usage
+- [ ] Check server resource usage
+- [ ] Review error logs regularly
 
 ## 🆘 Support
 
-If you encounter issues:
-1. Check error logs in cPanel
-2. Enable error display temporarily (`display_errors = 1`)
-3. Check browser console for JavaScript errors
-4. Verify all files uploaded correctly
-5. Test API endpoints directly
+**If you encounter issues, follow this checklist:**
+
+1. **Check Error Logs:**
+   - [ ] Open Hostinger cPanel → Error Log
+   - [ ] Look for PHP fatal errors
+   - [ ] Check for file path errors
+   - [ ] Note any permission errors
+
+2. **Enable Debugging:**
+   - [ ] Edit `config.php`: Set `display_errors = 1`
+   - [ ] Refresh the page to see error messages
+   - [ ] **Remember to set back to 0 after debugging!**
+
+3. **Browser Debugging:**
+   - [ ] Open browser DevTools (F12)
+   - [ ] Check Console tab for JavaScript errors
+   - [ ] Check Network tab for failed requests
+   - [ ] Look for 404 or 500 errors
+
+4. **File Verification:**
+   - [ ] Verify all files uploaded correctly
+   - [ ] Check `config.php` exists and has API key
+   - [ ] Verify `.htaccess` is present
+   - [ ] Check folder permissions (755 for folders, 644 for files)
+
+5. **API Testing:**
+   - [ ] Test: https://lyriclift.com/api/test.php
+   - [ ] Test: https://lyriclift.com/api/health.php
+   - [ ] Test individual API endpoints
+   - [ ] Verify API key is valid and has credits
 
 ## 📝 Notes
 

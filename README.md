@@ -162,30 +162,45 @@ define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: 'fallback-key');
 
 ### Lyrics Enhancement
 
-1. Paste your lyrics in the editor
-2. Select text you want to enhance
-3. Click "✨ Mark for Enhancement" (text will be highlighted)
-4. Repeat for multiple sections
-5. Click "✨ Enhance Lyrics" to get AI suggestions
-6. Choose alternatives from dropdowns (includes rhyme indicators)
-7. Click "✅ Apply Selected Lines" to update your lyrics
+**Step-by-step guide:**
+1. [ ] Paste your lyrics in the editor
+2. [ ] Select text you want to enhance
+3. [ ] Click "✨ Mark for Enhancement" (text will be highlighted in yellow)
+4. [ ] Repeat for multiple sections (each will be highlighted)
+5. [ ] Click "✨ Enhance Lyrics" to get AI suggestions
+6. [ ] Review alternatives in dropdowns (includes rhyme type indicators)
+7. [ ] Choose your preferred alternative from each dropdown
+8. [ ] Click "✅ Apply Selected Lines" to update your lyrics
+9. [ ] Continue editing or save your work
 
 ### Saving Songs
 
-1. Click "💾 Save Current Song"
-2. Enter song title
-3. Add authors (name, email, role)
-4. Optionally register to blockchain
-5. Add version notes
-6. Click "Save & Register"
+**Complete workflow:**
+1. [ ] Click "💾 Save Current Song" button
+2. [ ] Enter song title
+3. [ ] Add authors:
+   - [ ] Author name (required)
+   - [ ] Email (optional)
+   - [ ] Role (Primary Writer, Co-Writer, or Contributor)
+   - [ ] Add more authors if needed
+4. [ ] Check "Register to blockchain" if you want ownership proof
+5. [ ] Add version notes (optional)
+6. [ ] Choose "Save as new version" or update current version
+7. [ ] Click "Save & Register"
+8. [ ] Confirm success notification
 
 ### Audio Studio
 
-1. Navigate to Audio Studio
-2. Select audio tracks to play
-3. Load or paste lyrics
-4. Adjust font size and enable auto-scroll
-5. Practice singing along with looped tracks
+**Using the audio studio:**
+1. [ ] Navigate to Audio Studio from main menu
+2. [ ] Audio tracks will load automatically from `/mp3` folder
+3. [ ] Click play/pause button for each track you want to hear
+4. [ ] Toggle loop on/off for each track
+5. [ ] Adjust volume slider for each track
+6. [ ] Load saved lyrics or paste new lyrics in the display area
+7. [ ] Adjust font size slider for comfortable reading
+8. [ ] Enable auto-scroll for hands-free practice
+9. [ ] Practice singing along with the looped tracks
 
 ## 🔐 Security Notes
 

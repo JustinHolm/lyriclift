@@ -100,16 +100,74 @@ public_html/
 
 ## Quick Health Check
 
-After fixing issues, test:
-1. https://lyriclift.com/api/health.php - Should return JSON
-2. https://lyriclift.com - Should show main page
-3. Check browser console (F12) for JavaScript errors
+**After fixing issues, test this checklist:**
+
+- [ ] **Health endpoint:** https://lyriclift.com/api/health.php
+  - Returns valid JSON
+  - Shows `"status": "ok"`
+  - Shows `"config_file": "exists"`
+  - Shows `"openai": "configured"`
+
+- [ ] **Test endpoint:** https://lyriclift.com/api/test.php
+  - Shows PHP is working
+  - Shows config loaded successfully
+  - Shows API key is defined
+
+- [ ] **Main site:** https://lyriclift.com
+  - Page loads without errors
+  - Navigation menu appears
+  - All links work
+
+- [ ] **Browser console:** Press F12
+  - No JavaScript errors
+  - No 404 errors for assets
+  - No 500 errors for API calls
+
+- [ ] **API endpoints:**
+  - [ ] `/api/get-audio.php` returns audio list
+  - [ ] `/api/get-songs.php` returns songs list
+  - [ ] `/api/enhance-lyrics.php` works (test with sample lyrics)
 
 ## Still Having Issues?
 
-1. Check Hostinger error logs
-2. Verify PHP version (should be 7.4+)
-3. Ensure all files uploaded correctly
-4. Check file permissions
-5. Verify `.htaccess` is active
+**Follow this troubleshooting checklist:**
+
+- [ ] **Check Hostinger error logs**
+  - Go to cPanel → Error Log
+  - Look for PHP fatal errors
+  - Note any file path errors
+  - Check for permission errors
+
+- [ ] **Verify PHP version**
+  - Should be PHP 7.4 or higher (8.0+ recommended)
+  - Check in cPanel → PHP Version
+  - Update if needed
+
+- [ ] **Verify file structure**
+  - All files uploaded correctly
+  - `config.php` exists in root
+  - `.htaccess` exists in root
+  - `api/` folder contains all PHP files
+  - `public/` folder contains all frontend files
+
+- [ ] **Check file permissions**
+  - Folders: 755 (`songs/`, `blockchain/`, `media/`, `mp3/`)
+  - PHP files: 644
+  - `config.php`: 644
+  - `.htaccess`: 644
+
+- [ ] **Verify `.htaccess` is active**
+  - File exists in root directory
+  - Apache mod_rewrite is enabled
+  - Check with Hostinger support if unsure
+
+- [ ] **Test API key**
+  - Key is valid and has credits
+  - No typos in the key
+  - Key is properly quoted in `config.php`
+
+- [ ] **Check server resources**
+  - Sufficient disk space
+  - PHP memory limit adequate
+  - No server-side blocking
 
