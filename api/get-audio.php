@@ -5,7 +5,23 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once __DIR__ . '/../config.php';
+// Try to load config, handle errors gracefully
+$configLoaded = false;
+try {
+    $configPath = __DIR__ . '/../config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+        $configLoaded = true;
+    }
+} catch (Throwable $e) {
+    // Config failed to load, use defaults
+    $configLoaded = false;
+}
+
+// Define MEDIA_FOLDER if not defined
+if (!defined('MEDIA_FOLDER')) {
+    define('MEDIA_FOLDER', __DIR__ . '/../media');
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
@@ -45,12 +61,16 @@ foreach ($files as $file) {
         $jsonFile = str_replace('.' . $extension, '.json', $file);
         $jsonPath = MEDIA_FOLDER . '/' . $jsonFile;
         
-        if (file_exists($jsonPath)) {
-            $jsonContent = file_get_contents($jsonPath);
-            $metadata = json_decode($jsonContent, true);
-            if ($metadata) {
-                $audioInfo['description'] = $metadata['description'] ?? '';
-                $audioInfo['tags'] = $metadata['tags'] ?? [];
+        if (file_exists($jsonPath) && is_readable($jsonPath)) {
+            try {
+                $jsonContent = file_get_contents($jsonPath);
+                $metadata = json_decode($jsonContent, true);
+                if ($metadata) {
+                    $audioInfo['description'] = $metadata['description'] ?? '';
+                    $audioInfo['tags'] = $metadata['tags'] ?? [];
+                }
+            } catch (Exception $e) {
+                // Skip metadata if file can't be read
             }
         }
         

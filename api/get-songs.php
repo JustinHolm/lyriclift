@@ -3,7 +3,15 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-require_once __DIR__ . '/../config.php';
+// Try to load config, handle errors gracefully
+try {
+    $configPath = __DIR__ . '/../config.php';
+    if (file_exists($configPath)) {
+        require_once $configPath;
+    }
+} catch (Throwable $e) {
+    // Config failed to load, continue without it
+}
 
 $songsFolder = __DIR__ . '/../songs';
 $songs = [];
