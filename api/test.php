@@ -43,23 +43,52 @@ echo "\n";
 echo "Test 2: Loading config.php\n";
 try {
     if ($configPath && file_exists($configPath)) {
+        // Check if file starts with <?php
+        $fileContent = file_get_contents($configPath);
+        $startsWithPhp = strpos(trim($fileContent), '<?php') === 0;
+        echo "File starts with <?php: " . ($startsWithPhp ? 'YES ✓' : 'NO ✗') . "\n";
+        
+        if (!$startsWithPhp) {
+            echo "WARNING: config.php should start with <?php\n";
+            echo "First 100 characters: " . substr($fileContent, 0, 100) . "\n";
+        }
+        
+        // Capture any output
+        ob_start();
         require_once $configPath;
+        $output = ob_get_clean();
+        
+        if (!empty($output)) {
+            echo "WARNING: config.php produced output: " . substr($output, 0, 200) . "\n";
+        }
+        
         echo "Config loaded: SUCCESS\n";
         
         if (defined('OPENAI_API_KEY')) {
-            $keyLength = strlen(OPENAI_API_KEY);
+            $keyValue = OPENAI_API_KEY;
+            $keyLength = strlen($keyValue);
             echo "API Key defined: YES (length: $keyLength)\n";
-            echo "API Key starts with: " . substr(OPENAI_API_KEY, 0, 7) . "...\n";
+            echo "API Key starts with: " . substr($keyValue, 0, 7) . "...\n";
+            echo "API Key is set (not default): " . ($keyValue !== 'your-api-key-here' && !empty($keyValue) ? 'YES ✓' : 'NO ✗') . "\n";
         } else {
             echo "API Key defined: NO\n";
+            echo "Checking all defined constants with 'OPENAI' in name:\n";
+            $allConstants = get_defined_constants(true);
+            foreach ($allConstants['user'] ?? [] as $name => $value) {
+                if (stripos($name, 'OPENAI') !== false) {
+                    echo "  Found: $name\n";
+                }
+            }
         }
     } else {
         echo "Config loaded: FAILED (file not found)\n";
     }
 } catch (Exception $e) {
     echo "Config loaded: ERROR - " . $e->getMessage() . "\n";
+    echo "Stack trace: " . $e->getTraceAsString() . "\n";
 } catch (Error $e) {
     echo "Config loaded: FATAL ERROR - " . $e->getMessage() . "\n";
+    echo "Stack trace: " . $e->getTraceAsString() . "\n";
 }
 
 echo "\n";
