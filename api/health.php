@@ -13,10 +13,15 @@ $configError = null;
 $configPath = null;
 
 try {
-    // Try multiple possible locations
+    // Try multiple possible locations (check outside public_html first for security)
+    $rootDir = dirname(__DIR__); // public_html/
+    $parentDir = dirname($rootDir); // Parent of public_html/
+    
     $possiblePaths = [
-        __DIR__ . '/../config.php',  // Standard location (api/../config.php)
-        dirname(__DIR__) . '/config.php',  // Alternative (normalized)
+        $parentDir . '/config.php',  // Outside public_html (preferred for security)
+        __DIR__ . '/../../config.php',  // Relative path outside
+        dirname(__DIR__) . '/config.php',  // Inside public_html (fallback)
+        __DIR__ . '/../config.php',  // Relative path inside
         $_SERVER['DOCUMENT_ROOT'] . '/config.php',  // From document root
     ];
     

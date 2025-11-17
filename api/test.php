@@ -7,22 +7,42 @@ echo "PHP Version: " . PHP_VERSION . "\n\n";
 
 // Test 1: Check if we can read files
 echo "Test 1: File system access\n";
-$configPath = __DIR__ . '/../config.php';
-$configPathResolved = realpath($configPath); // This resolves api/../ to the actual path
 $rootDir = dirname(__DIR__); // Parent of api/ = public_html/
+$parentDir = dirname($rootDir); // Parent of public_html/ (outside web root)
+
+// Try multiple locations
+$possiblePaths = [
+    $parentDir . '/config.php',  // Outside public_html (preferred for security)
+    $rootDir . '/config.php',     // Inside public_html (fallback)
+    __DIR__ . '/../../config.php', // Relative path outside
+    __DIR__ . '/../config.php',    // Relative path inside
+];
+
+$configPath = null;
+$configPathResolved = null;
+
+foreach ($possiblePaths as $path) {
+    if (file_exists($path)) {
+        $configPath = $path;
+        $configPathResolved = realpath($path) ?: $path;
+        break;
+    }
+}
 
 echo "Current directory (api/): " . __DIR__ . "\n";
 echo "Root directory (public_html/): " . $rootDir . "\n";
-echo "Config path (relative): api/../config.php\n";
+echo "Parent directory (outside public_html/): " . $parentDir . "\n";
 echo "Config path (resolved): " . ($configPathResolved ?: 'NOT FOUND') . "\n";
-echo "Config should be at: " . $rootDir . "/config.php\n";
-echo "Config exists: " . (file_exists($configPath) ? 'YES ✓' : 'NO ✗') . "\n";
-echo "Config readable: " . (is_readable($configPath) ? 'YES ✓' : 'NO ✗') . "\n\n";
+echo "Config exists: " . ($configPath ? 'YES ✓' : 'NO ✗') . "\n";
+if ($configPath) {
+    echo "Config readable: " . (is_readable($configPath) ? 'YES ✓' : 'NO ✗') . "\n";
+}
+echo "\n";
 
 // Test 2: Try to include config
 echo "Test 2: Loading config.php\n";
 try {
-    if (file_exists($configPath)) {
+    if ($configPath && file_exists($configPath)) {
         require_once $configPath;
         echo "Config loaded: SUCCESS\n";
         

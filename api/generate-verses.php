@@ -5,10 +5,18 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Try to load config, handle errors gracefully
+// Try to load config, handle errors gracefully (check outside public_html first)
 try {
-    $configPath = __DIR__ . '/../config.php';
-    if (file_exists($configPath)) {
+    $rootDir = dirname(__DIR__);
+    $parentDir = dirname($rootDir);
+    $configPath = null;
+    foreach ([$parentDir . '/config.php', __DIR__ . '/../../config.php', $rootDir . '/config.php', __DIR__ . '/../config.php'] as $path) {
+        if (file_exists($path)) {
+            $configPath = $path;
+            break;
+        }
+    }
+    if ($configPath) {
         require_once $configPath;
     }
 } catch (Throwable $e) {

@@ -3,7 +3,19 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-require_once __DIR__ . '/../config.php';
+// Load config from outside public_html (preferred) or inside (fallback)
+$rootDir = dirname(__DIR__);
+$parentDir = dirname($rootDir);
+$configPath = null;
+foreach ([$parentDir . '/config.php', __DIR__ . '/../../config.php', $rootDir . '/config.php', __DIR__ . '/../config.php'] as $path) {
+    if (file_exists($path)) {
+        $configPath = $path;
+        break;
+    }
+}
+if ($configPath) {
+    require_once $configPath;
+}
 
 $songId = $_GET['id'] ?? '';
 $version = isset($_GET['version']) ? intval($_GET['version']) : null;
