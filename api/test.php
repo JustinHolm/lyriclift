@@ -8,9 +8,16 @@ echo "PHP Version: " . PHP_VERSION . "\n\n";
 // Test 1: Check if we can read files
 echo "Test 1: File system access\n";
 $configPath = __DIR__ . '/../config.php';
-echo "Config path: " . $configPath . "\n";
-echo "Config exists: " . (file_exists($configPath) ? 'YES' : 'NO') . "\n";
-echo "Config readable: " . (is_readable($configPath) ? 'YES' : 'NO') . "\n\n";
+$configPathResolved = realpath($configPath); // This resolves api/../ to the actual path
+$rootDir = dirname(__DIR__); // Parent of api/ = public_html/
+
+echo "Current directory (api/): " . __DIR__ . "\n";
+echo "Root directory (public_html/): " . $rootDir . "\n";
+echo "Config path (relative): api/../config.php\n";
+echo "Config path (resolved): " . ($configPathResolved ?: 'NOT FOUND') . "\n";
+echo "Config should be at: " . $rootDir . "/config.php\n";
+echo "Config exists: " . (file_exists($configPath) ? 'YES ✓' : 'NO ✗') . "\n";
+echo "Config readable: " . (is_readable($configPath) ? 'YES ✓' : 'NO ✗') . "\n\n";
 
 // Test 2: Try to include config
 echo "Test 2: Loading config.php\n";

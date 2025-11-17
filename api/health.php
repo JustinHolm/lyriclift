@@ -10,13 +10,28 @@ header('Access-Control-Allow-Origin: *');
 // Try to load config, but handle gracefully if missing
 $configExists = false;
 $configError = null;
+$configPath = null;
 
 try {
-    $configPath = __DIR__ . '/../config.php';
-    $configExists = file_exists($configPath);
+    // Try multiple possible locations
+    $possiblePaths = [
+        __DIR__ . '/../config.php',  // Standard location (api/../config.php)
+        dirname(__DIR__) . '/config.php',  // Alternative (normalized)
+        $_SERVER['DOCUMENT_ROOT'] . '/config.php',  // From document root
+    ];
     
-    if ($configExists) {
-        require_once $configPath;
+    foreach ($possiblePaths as $path) {
+        if (file_exists($path)) {
+            $configPath = realpath($path) ?: $path;
+            $configExists = true;
+            require_once $path;
+            break;
+        }
+    }
+    
+    // If still not found, try the first path anyway (might be permission issue)
+    if (!$configExists) {
+        $configPath = __DIR__ . '/../config.php';
     }
 } catch (Throwable $e) {
     $configError = $e->getMessage();
@@ -27,13 +42,14 @@ $status = [
     'status' => 'ok',
     'config_file' => $configExists ? 'exists' : 'missing',
     'config_error' => $configError,
+    'config_path' => $configPath ? (realpath($configPath) ?: $configPath) : (__DIR__ . '/../config.php'),
     'openai' => 'not configured',
     'media_folder' => 'unknown',
     'media_files' => 0,
     'timestamp' => date('c'),
     'php_version' => PHP_VERSION,
     'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
-    'config_path' => __DIR__ . '/../config.php'
+    'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? 'unknown'
 ];
 
 // Check OpenAI configuration if config exists
