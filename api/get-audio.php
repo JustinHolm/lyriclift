@@ -43,11 +43,26 @@ $audioFiles = [];
 
 if (!is_dir($mp3Folder)) {
     http_response_code(404);
-    echo json_encode(['error' => 'MP3 folder not found']);
+    echo json_encode([
+        'success' => false,
+        'error' => 'MP3 folder not found',
+        'path' => $mp3Folder,
+        'resolved_path' => realpath($mp3Folder) ?: 'Path does not exist'
+    ]);
     exit;
 }
 
 $files = scandir($mp3Folder);
+if ($files === false) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Cannot read MP3 folder',
+        'path' => $mp3Folder
+    ]);
+    exit;
+}
+
 $audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma'];
 
 // Find all audio files

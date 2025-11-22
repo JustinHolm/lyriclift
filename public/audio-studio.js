@@ -50,17 +50,28 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadAudioFiles() {
         try {
             const response = await fetch('/api/get-audio.php');
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error:', response.status, errorText);
+                audioTracksContainer.innerHTML = `<p style="text-align: center; color: #e53e3e;">Error loading audio files (HTTP ${response.status}).<br><small>Check console for details.</small></p>`;
+                return;
+            }
+            
             const data = await response.json();
 
             if (data.success && data.audioFiles && data.audioFiles.length > 0) {
                 audioTracks = data.audioFiles;
                 displayAudioTracks(data.audioFiles);
+            } else if (data.error) {
+                console.error('API returned error:', data.error);
+                audioTracksContainer.innerHTML = `<p style="text-align: center; color: #e53e3e;">Error: ${data.error}</p>`;
             } else {
                 audioTracksContainer.innerHTML = '<p style="text-align: center; color: #718096;">No audio files found in /mp3 folder.</p>';
             }
         } catch (error) {
             console.error('Error loading audio files:', error);
-            audioTracksContainer.innerHTML = '<p style="text-align: center; color: #e53e3e;">Error loading audio files.</p>';
+            audioTracksContainer.innerHTML = `<p style="text-align: center; color: #e53e3e;">Error loading audio files.<br><small>${error.message}</small></p>`;
         }
     }
 
