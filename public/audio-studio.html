@@ -139,31 +139,34 @@
             gap: 12px;
             margin-bottom: 10px;
         }
-        .track-reorder-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin-right: 5px;
-        }
-        .move-up-btn, .move-down-btn {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-            min-width: 32px;
+        .drag-handle {
+            cursor: move;
+            cursor: grab;
+            color: #a0aec0;
+            font-size: 18px;
             line-height: 1;
+            padding: 4px 8px;
+            user-select: none;
+            transition: color 0.2s;
         }
-        .move-up-btn:hover:not(:disabled), .move-down-btn:hover:not(:disabled) {
-            background: #667eea;
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        .audio-track:hover .drag-handle {
+            color: #667eea;
+        }
+        .audio-track.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        .audio-track.drag-over {
             border-color: #667eea;
-            transform: scale(1.1);
+            border-style: dashed;
+            background: #f0f4ff;
         }
-        .move-up-btn:disabled, .move-down-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
+        .audio-track {
+            cursor: default;
+            transition: all 0.2s;
         }
         .track-icon-small {
             width: 40px;

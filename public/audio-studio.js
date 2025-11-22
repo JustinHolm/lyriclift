@@ -138,16 +138,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const trackDiv = document.createElement('div');
             trackDiv.className = 'audio-track';
             trackDiv.id = `track-${index}`;
+            trackDiv.draggable = true;
+            trackDiv.dataset.index = index;
+            trackDiv.dataset.filename = track.filename;
             
             trackDiv.innerHTML = `
                 <div class="track-header">
-                    <div class="track-reorder-controls">
-                        <button class="move-up-btn" title="Move up" ${index === 0 ? 'disabled' : ''}>
-                            ⬆️
-                        </button>
-                        <button class="move-down-btn" title="Move down" ${index === tracks.length - 1 ? 'disabled' : ''}>
-                            ⬇️
-                        </button>
+                    <div class="drag-handle" title="Drag to reorder">
+                        ⋮⋮
                     </div>
                     <div class="track-icon-small" style="background: ${trackInfo.color}20; border: 2px solid ${trackInfo.color};">
                         ${trackInfo.icon}
@@ -190,16 +188,78 @@ document.addEventListener('DOMContentLoaded', function() {
             
             audioElements.set(track.filename, audioData);
             
-            // Move up button
-            const moveUpBtn = trackDiv.querySelector('.move-up-btn');
-            moveUpBtn.addEventListener('click', function() {
-                moveTrack(index, 'up');
+            // Drag and drop handlers
+            trackDiv.addEventListener('dragstart', function(e) {
+                // Don't drag if clicking on controls
+                if (e.target.closest('.play-pause-btn-small, .loop-toggle-small, .volume-slider, .track-controls-small')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', index.toString());
+                this.classList.add('dragging');
             });
             
-            // Move down button
-            const moveDownBtn = trackDiv.querySelector('.move-down-btn');
-            moveDownBtn.addEventListener('click', function() {
-                moveTrack(index, 'down');
+            trackDiv.addEventListener('dragend', function(e) {
+                this.classList.remove('dragging');
+                // Remove all drag-over classes
+                document.querySelectorAll('.audio-track').forEach(t => t.classList.remove('drag-over'));
+            });
+            
+            trackDiv.addEventListener('dragover', function(e) {
+                // Don't allow drop on controls
+                if (e.target.closest('.play-pause-btn-small, .loop-toggle-small, .volume-slider, .track-controls-small')) {
+                    return;
+                }
+                
+                if (e.preventDefault) {
+                    e.preventDefault();
+                }
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+                return false;
+            });
+            
+            trackDiv.addEventListener('dragleave', function(e) {
+                // Only remove drag-over if we're actually leaving the track
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX;
+                const y = e.clientY;
+                if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                    this.classList.remove('drag-over');
+                }
+            });
+            
+            trackDiv.addEventListener('drop', function(e) {
+                // Don't allow drop on controls
+                if (e.target.closest('.play-pause-btn-small, .loop-toggle-small, .volume-slider, .track-controls-small')) {
+                    return;
+                }
+                
+                if (e.stopPropagation) {
+                    e.stopPropagation();
+                }
+                
+                const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                const dropIndex = index;
+                
+                if (!isNaN(draggedIndex) && draggedIndex !== dropIndex) {
+                    // Swap tracks in array
+                    [audioTracks[draggedIndex], audioTracks[dropIndex]] = [audioTracks[dropIndex], audioTracks[draggedIndex]];
+                    
+                    // Update track order array
+                    trackOrder = audioTracks.map(t => t.filename);
+                    saveTrackOrder();
+                    
+                    // Re-render tracks
+                    displayAudioTracks(audioTracks);
+                    
+                    showNotification('Track order updated!', 'success');
+                }
+                
+                this.classList.remove('drag-over');
+                return false;
             });
             
             // Play/Pause button
@@ -224,26 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 volumeValue.textContent = this.value + '%';
             });
         });
-    }
-
-    // Move track up or down
-    function moveTrack(currentIndex, direction) {
-        if (direction === 'up' && currentIndex === 0) return;
-        if (direction === 'down' && currentIndex === audioTracks.length - 1) return;
-        
-        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-        
-        // Swap tracks in array
-        [audioTracks[currentIndex], audioTracks[newIndex]] = [audioTracks[newIndex], audioTracks[currentIndex]];
-        
-        // Update track order array
-        trackOrder = audioTracks.map(t => t.filename);
-        saveTrackOrder();
-        
-        // Re-render tracks
-        displayAudioTracks(audioTracks);
-        
-        showNotification(`Track moved ${direction}`, 'success');
     }
 
     function toggleAudio(audioData) {
