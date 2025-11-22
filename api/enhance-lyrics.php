@@ -1,15 +1,35 @@
 <?php
 // api/enhance-lyrics.php
+// Disable error display but enable logging
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
+
 // Start output buffering to catch any accidental output
 ob_start();
 
+// Set headers early
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Function to send error response
+function sendError($message, $code = 500, $details = null) {
+    ob_clean();
+    http_response_code($code);
+    $response = ['success' => false, 'error' => $message];
+    if ($details) {
+        $response['details'] = $details;
+    }
+    echo json_encode($response);
+    ob_end_flush();
+    exit;
+}
+
 // Load config from outside public_html (preferred) or inside (fallback)
 $configLoaded = false;
+$configError = null;
 try {
     $rootDir = dirname(__DIR__);
     $parentDir = dirname($rootDir);
@@ -22,26 +42,42 @@ try {
     }
     if ($configPath) {
         // Check if file starts with <?php to avoid outputting PHP code
-        $fileContent = file_get_contents($configPath);
-        $startsWithPhp = strpos(trim($fileContent), '<?php') === 0;
-        
-        if ($startsWithPhp) {
-            // Capture any output from config.php
-            ob_start();
-            require_once $configPath;
-            $output = ob_get_clean();
-            
-            // If config.php produced output, that's a problem
-            if (!empty($output)) {
-                error_log("Warning: config.php produced output: " . substr($output, 0, 200));
-            } else {
-                $configLoaded = true;
-            }
+        $fileContent = @file_get_contents($configPath);
+        if ($fileContent === false) {
+            $configError = "Cannot read config.php file";
+            error_log("Error: Cannot read config.php at $configPath");
         } else {
-            error_log("Error: config.php does not start with <?php tag");
+            $startsWithPhp = strpos(trim($fileContent), '<?php') === 0;
+            
+            if ($startsWithPhp) {
+                // Capture any output from config.php
+                ob_start();
+                try {
+                    require_once $configPath;
+                    $output = ob_get_clean();
+                    
+                    // If config.php produced output, that's a problem
+                    if (!empty($output)) {
+                        error_log("Warning: config.php produced output: " . substr($output, 0, 200));
+                        $configError = "config.php produced unexpected output";
+                    } else {
+                        $configLoaded = true;
+                    }
+                } catch (Throwable $e) {
+                    ob_end_clean();
+                    $configError = $e->getMessage();
+                    error_log("Error requiring config.php: " . $e->getMessage());
+                }
+            } else {
+                $configError = "config.php does not start with <?php tag";
+                error_log("Error: config.php does not start with <?php tag");
+            }
         }
+    } else {
+        $configError = "config.php file not found";
     }
 } catch (Throwable $e) {
+    $configError = $e->getMessage();
     error_log("Error loading config.php: " . $e->getMessage());
     $configLoaded = false;
 }
@@ -52,36 +88,39 @@ if (!defined('OPENAI_API_KEY')) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    ob_clean();
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    ob_end_flush();
-    exit;
+    sendError('Method not allowed', 405);
 }
 
-// Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
+// Get input
+$input = null;
+try {
+    $inputData = file_get_contents('php://input');
+    if ($inputData === false) {
+        sendError('Failed to read request data', 400);
+    }
+    $input = json_decode($inputData, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        sendError('Invalid JSON in request', 400, json_last_error_msg());
+    }
+} catch (Throwable $e) {
+    sendError('Error parsing request', 400, $e->getMessage());
+}
+
 $lyrics = $input['lyrics'] ?? '';
 
 if (empty(trim($lyrics))) {
-    ob_clean();
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Lyrics are required']);
-    ob_end_flush();
-    exit;
+    sendError('Lyrics are required', 400);
 }
 
 // Check if API key is defined and valid
-if (!defined('OPENAI_API_KEY') || empty(OPENAI_API_KEY) || OPENAI_API_KEY === 'your-api-key-here') {
-    ob_clean();
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => 'OpenAI service not available. Please check your API key configuration.',
-        'details' => $configLoaded ? 'API key is not set in config.php' : 'config.php failed to load or is missing'
-    ]);
-    ob_end_flush();
-    exit;
+if (!defined('OPENAI_API_KEY')) {
+    sendError('OpenAI API key not defined', 500, $configError ?: 'config.php failed to load');
+}
+
+$apiKey = OPENAI_API_KEY;
+if (empty($apiKey) || $apiKey === 'your-api-key-here') {
+    sendError('OpenAI service not available. Please check your API key configuration.', 500, 
+        $configLoaded ? 'API key is not set in config.php' : ($configError ?: 'config.php failed to load or is missing'));
 }
 
 // Prepare OpenAI API request
@@ -143,15 +182,7 @@ $curlError = curl_error($ch);
 curl_close($ch);
 
 if ($curlError) {
-    ob_clean();
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => 'Failed to connect to OpenAI API',
-        'details' => $curlError
-    ]);
-    ob_end_flush();
-    exit;
+    sendError('Failed to connect to OpenAI API', 500, $curlError);
 }
 
 if ($httpCode !== 200) {
@@ -179,16 +210,7 @@ if ($httpCode !== 200) {
     }
     
     ob_clean();
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => 'OpenAI API error',
-        'details' => $errorMessage,
-        'code' => $errorCode,
-        'http_code' => $httpCode
-    ]);
-    ob_end_flush();
-    exit;
+    sendError('OpenAI API error', 500, $errorMessage);
 }
 
 $data = json_decode($response, true);
