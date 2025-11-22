@@ -1,5 +1,8 @@
 <?php
 // api/enhance-with-rhyme.php - Enhanced lyrics with rhyme detection and multiple alternatives
+// Start output buffering to catch any accidental output
+ob_start();
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
@@ -16,12 +19,30 @@ foreach ([$parentDir . '/config.php', __DIR__ . '/../../config.php', $rootDir . 
     }
 }
 if ($configPath) {
-    require_once $configPath;
+    // Check if file starts with <?php to avoid outputting PHP code
+    $fileContent = file_get_contents($configPath);
+    $startsWithPhp = strpos(trim($fileContent), '<?php') === 0;
+    
+    if ($startsWithPhp) {
+        // Capture any output from config.php
+        ob_start();
+        require_once $configPath;
+        $output = ob_get_clean();
+        
+        // If config.php produced output, that's a problem
+        if (!empty($output)) {
+            error_log("Warning: config.php produced output: " . substr($output, 0, 200));
+        }
+    } else {
+        error_log("Error: config.php does not start with <?php tag");
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_clean();
     http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    ob_end_flush();
     exit;
 }
 
@@ -29,16 +50,21 @@ $input = json_decode(file_get_contents('php://input'), true);
 $lyrics = $input['lyrics'] ?? '';
 
 if (empty(trim($lyrics))) {
+    ob_clean();
     http_response_code(400);
-    echo json_encode(['error' => 'Lyrics are required']);
+    echo json_encode(['success' => false, 'error' => 'Lyrics are required']);
+    ob_end_flush();
     exit;
 }
 
 if (empty(OPENAI_API_KEY) || OPENAI_API_KEY === 'your-api-key-here') {
+    ob_clean();
     http_response_code(500);
     echo json_encode([
+        'success' => false,
         'error' => 'OpenAI service not available. Please check your API key configuration.'
     ]);
+    ob_end_flush();
     exit;
 }
 
@@ -123,11 +149,14 @@ $curlError = curl_error($ch);
 curl_close($ch);
 
 if ($curlError) {
+    ob_clean();
     http_response_code(500);
     echo json_encode([
+        'success' => false,
         'error' => 'Failed to connect to OpenAI API',
         'details' => $curlError
     ]);
+    ob_end_flush();
     exit;
 }
 
@@ -135,11 +164,14 @@ if ($httpCode !== 200) {
     $errorData = json_decode($response, true);
     $errorMessage = $errorData['error']['message'] ?? 'Unknown error';
     
+    ob_clean();
     http_response_code(500);
     echo json_encode([
+        'success' => false,
         'error' => 'OpenAI API error',
         'details' => $errorMessage
     ]);
+    ob_end_flush();
     exit;
 }
 
@@ -154,17 +186,22 @@ if (preg_match('/\{.*\}/s', $aiResponse, $matches)) {
 
 if (!$enhancementData || !isset($enhancementData['sections'])) {
     // Fallback to basic enhancement
+    ob_clean();
     http_response_code(500);
     echo json_encode([
+        'success' => false,
         'error' => 'Failed to parse enhancement data',
         'fallback' => true
     ]);
+    ob_end_flush();
     exit;
 }
 
+ob_clean();
 echo json_encode([
     'success' => true,
     'sections' => $enhancementData['sections'] ?? [],
     'originalLyrics' => $lyrics
 ]);
+ob_end_flush();
 

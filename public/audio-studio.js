@@ -13,6 +13,55 @@ document.addEventListener('DOMContentLoaded', function() {
     let audioElements = new Map();
     let audioTracks = [];
     let autoScrollInterval = null;
+    let trackOrder = []; // Store custom track order
+
+    // Load saved track order from localStorage
+    function loadTrackOrder() {
+        const saved = localStorage.getItem('audioTrackOrder');
+        if (saved) {
+            try {
+                trackOrder = JSON.parse(saved);
+            } catch (e) {
+                trackOrder = [];
+            }
+        }
+    }
+
+    // Save track order to localStorage
+    function saveTrackOrder() {
+        localStorage.setItem('audioTrackOrder', JSON.stringify(trackOrder));
+    }
+
+    // Apply saved order to tracks
+    function applyTrackOrder(tracks) {
+        if (trackOrder.length === 0) {
+            return tracks;
+        }
+        
+        // Create a map for quick lookup
+        const trackMap = new Map(tracks.map(t => [t.filename, t]));
+        
+        // Build ordered array
+        const ordered = [];
+        const used = new Set();
+        
+        // Add tracks in saved order
+        for (const filename of trackOrder) {
+            if (trackMap.has(filename)) {
+                ordered.push(trackMap.get(filename));
+                used.add(filename);
+            }
+        }
+        
+        // Add any new tracks not in saved order
+        for (const track of tracks) {
+            if (!used.has(track.filename)) {
+                ordered.push(track);
+            }
+        }
+        
+        return ordered;
+    }
 
     // Track type detection
     function getTrackIcon(filename) {
@@ -61,8 +110,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (data.success && data.audioFiles && data.audioFiles.length > 0) {
-                audioTracks = data.audioFiles;
-                displayAudioTracks(data.audioFiles);
+                // Load saved order and apply it
+                loadTrackOrder();
+                const orderedTracks = applyTrackOrder(data.audioFiles);
+                audioTracks = orderedTracks;
+                displayAudioTracks(orderedTracks);
             } else if (data.error) {
                 console.error('API returned error:', data.error);
                 audioTracksContainer.innerHTML = `<p style="text-align: center; color: #e53e3e;">Error: ${data.error}</p>`;
@@ -89,6 +141,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             trackDiv.innerHTML = `
                 <div class="track-header">
+                    <div class="track-reorder-controls">
+                        <button class="move-up-btn" title="Move up" ${index === 0 ? 'disabled' : ''}>
+                            ⬆️
+                        </button>
+                        <button class="move-down-btn" title="Move down" ${index === tracks.length - 1 ? 'disabled' : ''}>
+                            ⬇️
+                        </button>
+                    </div>
                     <div class="track-icon-small" style="background: ${trackInfo.color}20; border: 2px solid ${trackInfo.color};">
                         ${trackInfo.icon}
                     </div>
@@ -130,6 +190,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             audioElements.set(track.filename, audioData);
             
+            // Move up button
+            const moveUpBtn = trackDiv.querySelector('.move-up-btn');
+            moveUpBtn.addEventListener('click', function() {
+                moveTrack(index, 'up');
+            });
+            
+            // Move down button
+            const moveDownBtn = trackDiv.querySelector('.move-down-btn');
+            moveDownBtn.addEventListener('click', function() {
+                moveTrack(index, 'down');
+            });
+            
             // Play/Pause button
             const playPauseBtn = trackDiv.querySelector(`#play-pause-${index}`);
             playPauseBtn.addEventListener('click', function() {
@@ -152,6 +224,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 volumeValue.textContent = this.value + '%';
             });
         });
+    }
+
+    // Move track up or down
+    function moveTrack(currentIndex, direction) {
+        if (direction === 'up' && currentIndex === 0) return;
+        if (direction === 'down' && currentIndex === audioTracks.length - 1) return;
+        
+        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        
+        // Swap tracks in array
+        [audioTracks[currentIndex], audioTracks[newIndex]] = [audioTracks[newIndex], audioTracks[currentIndex]];
+        
+        // Update track order array
+        trackOrder = audioTracks.map(t => t.filename);
+        saveTrackOrder();
+        
+        // Re-render tracks
+        displayAudioTracks(audioTracks);
+        
+        showNotification(`Track moved ${direction}`, 'success');
     }
 
     function toggleAudio(audioData) {

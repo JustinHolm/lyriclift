@@ -169,7 +169,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            const data = await response.json();
+            // Check if response is OK before parsing JSON
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch (e) {
+                    // Response is not valid JSON - likely config.php output issue
+                    showNotification(`Network error (HTTP ${response.status}). Check server configuration.`, 'error');
+                    console.error('Invalid JSON response:', errorText.substring(0, 200));
+                    setLoadingState(enhanceBtn, false);
+                    return;
+                }
+                const errorMsg = errorData.details || errorData.error || 'Failed to enhance lyrics';
+                showNotification(`Error: ${errorMsg}`, 'error');
+                setLoadingState(enhanceBtn, false);
+                return;
+            }
+
+            let data;
+            try {
+                const responseText = await response.text();
+                data = JSON.parse(responseText);
+            } catch (e) {
+                // JSON parse error - likely config.php output issue
+                showNotification('Network error. Invalid response from server. Check server configuration.', 'error');
+                console.error('JSON parse error:', e.message);
+                setLoadingState(enhanceBtn, false);
+                return;
+            }
 
             if (data.success) {
                 outputSection.style.display = 'block';
