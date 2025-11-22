@@ -1,5 +1,8 @@
 <?php
 // api/get-audio.php
+// Start output buffering to catch any accidental output
+ob_start();
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
@@ -18,11 +21,29 @@ try {
         }
     }
     if ($configPath) {
-        require_once $configPath;
-        $configLoaded = true;
+        // Check if file starts with <?php to avoid outputting PHP code
+        $fileContent = file_get_contents($configPath);
+        $startsWithPhp = strpos(trim($fileContent), '<?php') === 0;
+        
+        if ($startsWithPhp) {
+            // Capture any output from config.php
+            ob_start();
+            require_once $configPath;
+            $output = ob_get_clean();
+            
+            // If config.php produced output, that's a problem
+            if (!empty($output)) {
+                error_log("Warning: config.php produced output: " . substr($output, 0, 200));
+            }
+            
+            $configLoaded = true;
+        } else {
+            error_log("Error: config.php does not start with <?php tag");
+        }
     }
 } catch (Throwable $e) {
     // Config failed to load, use defaults
+    error_log("Config loading error: " . $e->getMessage());
     $configLoaded = false;
 }
 
@@ -32,8 +53,10 @@ if (!defined('MEDIA_FOLDER')) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    ob_clean();
     http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    ob_end_flush();
     exit;
 }
 
@@ -42,6 +65,7 @@ $mp3Folder = __DIR__ . '/../mp3';
 $audioFiles = [];
 
 if (!is_dir($mp3Folder)) {
+    ob_clean();
     http_response_code(404);
     echo json_encode([
         'success' => false,
@@ -49,17 +73,20 @@ if (!is_dir($mp3Folder)) {
         'path' => $mp3Folder,
         'resolved_path' => realpath($mp3Folder) ?: 'Path does not exist'
     ]);
+    ob_end_flush();
     exit;
 }
 
 $files = scandir($mp3Folder);
 if ($files === false) {
+    ob_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'error' => 'Cannot read MP3 folder',
         'path' => $mp3Folder
     ]);
+    ob_end_flush();
     exit;
 }
 
@@ -106,9 +133,14 @@ usort($audioFiles, function($a, $b) {
     return $b['modified'] - $a['modified'];
 });
 
+// Clear any accidental output before sending JSON
+ob_clean();
+
 echo json_encode([
     'success' => true,
     'audioFiles' => $audioFiles,
     'total' => count($audioFiles)
 ]);
+
+ob_end_flush();
 
