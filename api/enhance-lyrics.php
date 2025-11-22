@@ -9,33 +9,46 @@ header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Load config from outside public_html (preferred) or inside (fallback)
-$rootDir = dirname(__DIR__);
-$parentDir = dirname($rootDir);
-$configPath = null;
-foreach ([$parentDir . '/config.php', __DIR__ . '/../../config.php', $rootDir . '/config.php', __DIR__ . '/../config.php'] as $path) {
-    if (file_exists($path)) {
-        $configPath = $path;
-        break;
-    }
-}
-if ($configPath) {
-    // Check if file starts with <?php to avoid outputting PHP code
-    $fileContent = file_get_contents($configPath);
-    $startsWithPhp = strpos(trim($fileContent), '<?php') === 0;
-    
-    if ($startsWithPhp) {
-        // Capture any output from config.php
-        ob_start();
-        require_once $configPath;
-        $output = ob_get_clean();
-        
-        // If config.php produced output, that's a problem
-        if (!empty($output)) {
-            error_log("Warning: config.php produced output: " . substr($output, 0, 200));
+$configLoaded = false;
+try {
+    $rootDir = dirname(__DIR__);
+    $parentDir = dirname($rootDir);
+    $configPath = null;
+    foreach ([$parentDir . '/config.php', __DIR__ . '/../../config.php', $rootDir . '/config.php', __DIR__ . '/../config.php'] as $path) {
+        if (file_exists($path)) {
+            $configPath = $path;
+            break;
         }
-    } else {
-        error_log("Error: config.php does not start with <?php tag");
     }
+    if ($configPath) {
+        // Check if file starts with <?php to avoid outputting PHP code
+        $fileContent = file_get_contents($configPath);
+        $startsWithPhp = strpos(trim($fileContent), '<?php') === 0;
+        
+        if ($startsWithPhp) {
+            // Capture any output from config.php
+            ob_start();
+            require_once $configPath;
+            $output = ob_get_clean();
+            
+            // If config.php produced output, that's a problem
+            if (!empty($output)) {
+                error_log("Warning: config.php produced output: " . substr($output, 0, 200));
+            } else {
+                $configLoaded = true;
+            }
+        } else {
+            error_log("Error: config.php does not start with <?php tag");
+        }
+    }
+} catch (Throwable $e) {
+    error_log("Error loading config.php: " . $e->getMessage());
+    $configLoaded = false;
+}
+
+// Define OPENAI_API_KEY if not defined (fallback)
+if (!defined('OPENAI_API_KEY')) {
+    define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: '');
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -58,14 +71,14 @@ if (empty(trim($lyrics))) {
     exit;
 }
 
-// Check API key
-if (empty(OPENAI_API_KEY) || OPENAI_API_KEY === 'your-api-key-here') {
+// Check if API key is defined and valid
+if (!defined('OPENAI_API_KEY') || empty(OPENAI_API_KEY) || OPENAI_API_KEY === 'your-api-key-here') {
     ob_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'error' => 'OpenAI service not available. Please check your API key configuration.',
-        'details' => 'The OpenAI API key is not configured.'
+        'details' => $configLoaded ? 'API key is not set in config.php' : 'config.php failed to load or is missing'
     ]);
     ob_end_flush();
     exit;
